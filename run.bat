@@ -1,3 +1,3 @@
 @echo off
-p2.exe
+lfgqueue.exe
 pause
