@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"os/exec"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -35,27 +38,86 @@ type Config struct {
 	InitialDPS    int
 }
 
+// Multi-platform clearscreen for the exe file
+func clearScreen() {
+    switch runtime.GOOS {
+    case "windows":
+        cmd := exec.Command("cmd", "/c", "cls")
+        cmd.Stdout = os.Stdout
+        cmd.Run()
+    default:
+        fmt.Print("\033[H\033[2J")
+    }
+}
+
+
 func main() {
 	var config Config
 
-	// Get user input
-	fmt.Print("Enter maximum number of concurrent instances (n): ")
-	fmt.Scan(&config.NumInstances)
+	// Get user input with validation
+	for {
+		fmt.Print("Enter maximum number of concurrent instances (n): ")
+		fmt.Scan(&config.NumInstances)
+		if config.NumInstances <= 0 {
+			fmt.Println("Error: Number of instances must be positive. Please try again.")
+			continue
+		}
+		break
+	}
 
-	fmt.Print("Enter number of tank players in the queue (t): ")
-	fmt.Scan(&config.InitialTanks)
+	for {
+		fmt.Print("Enter number of tank players in the queue (t): ")
+		fmt.Scan(&config.InitialTanks)
+		if config.InitialTanks < 0 {
+			fmt.Println("Error: Number of tanks cannot be negative. Please try again.")
+			continue
+		}
+		break
+	}
 
-	fmt.Print("Enter number of healer players in the queue (h): ")
-	fmt.Scan(&config.InitialHealers)
+	for {
+		fmt.Print("Enter number of healer players in the queue (h): ")
+		fmt.Scan(&config.InitialHealers)
+		if config.InitialHealers < 0 {
+			fmt.Println("Error: Number of healers cannot be negative. Please try again.")
+			continue
+		}
+		break
+	}
 
-	fmt.Print("Enter number of DPS players in the queue (d): ")
-	fmt.Scan(&config.InitialDPS)
+	for {
+		fmt.Print("Enter number of DPS players in the queue (d): ")
+		fmt.Scan(&config.InitialDPS)
+		if config.InitialDPS < 0 {
+			fmt.Println("Error: Number of DPS cannot be negative. Please try again.")
+			continue
+		}
+		break
+	}
 
-	fmt.Print("Enter minimum time before an instance is finished (t1): ")
-	fmt.Scan(&config.MinClearTime)
+	for {
+		fmt.Print("Enter minimum time before an instance is finished (t1): ")
+		fmt.Scan(&config.MinClearTime)
+		if config.MinClearTime <= 0 {
+			fmt.Println("Error: Minimum clear time must be positive. Please try again.")
+			continue
+		}
+		break
+	}
 
-	fmt.Print("Enter maximum time before an instance is finished (t2): ")
-	fmt.Scan(&config.MaxClearTime)
+	for {
+		fmt.Print("Enter maximum time before an instance is finished (t2): ")
+		fmt.Scan(&config.MaxClearTime)
+		if config.MaxClearTime < config.MinClearTime {
+			fmt.Println("Error: Maximum clear time cannot be less than minimum clear time. Please try again.")
+			continue
+		}
+		if config.MaxClearTime <= 0 {
+			fmt.Println("Error: Maximum clear time must be positive. Please try again.")
+			continue
+		}
+		break
+	}
 
 	// Initialize instances
 	instances := make([]*Instance, config.NumInstances)
@@ -226,7 +288,7 @@ func displayStatus(instances []*Instance, queue *Queue, wg *sync.WaitGroup, stop
 		case <-stopChan:
 			return
 		case <-ticker.C:
-			fmt.Print("\033[H\033[2J") // Clear screen mainly for golang i think
+			clearScreen()
 
 			activeCount := 0
 			emptyCount := 0
